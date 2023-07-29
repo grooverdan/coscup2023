@@ -1,0 +1,216 @@
+<h1>Doing Databases Right in Laravel</h1>
+
+<p>Daniel Black
+- MariaDB Expert
+- (not PHP or Laravel expert)
+- Please interupt if say silly on the Laravel side.</p>
+
+<p>Covering:</p>
+
+<ul>
+<li>Datatypes</li>
+<li>Structures</li>
+<li>Queries</li>
+<li>Indicies/Indexs</li>
+</ul>
+
+<p>This is the order you <em>design</em> the data side of your application.</p>
+
+<p>If you are <em>debugging</em> problems, reverse the order as that will
+yield quicker less intrusive fixes.</p>
+
+<h1>Choices</h1>
+
+<p>ORM:</p>
+
+<ul>
+<li>RedBeanPHP</li>
+<li>Doctrine</li>
+<li>Eloquent - ended development</li>
+</ul>
+
+<p>RAW:
+- Illuminate\Support\Facades\DB</p>
+
+<h1>Datatypes</h1>
+
+<p><a href="https://mariadb.com/kb/en/data-types/">MariaDB types</a> (extract):</p>
+
+<ul>
+<li>INT/BIT</li>
+<li>FLOAT/DOUBLE</li>
+<li><p>DECIMAL</p></li>
+<li><p>[VAR]CHAR</p></li>
+<li>BLOB/TEXT</li>
+<li><p>ENUM</p></li>
+<li><p>DATE</p></li>
+<li>TIMESTAMP</li>
+<li><p>YEAR</p></li>
+<li><p>JSON</p></li>
+</ul>
+
+<p>Doctrine 2 Annotation <a href="https://www.doctrine-project.org/projects/doctrine-dbal/en/current/reference/types.html#types">types</a></p>
+
+<pre><code><code><span style="color: #000000">
+<span style="color: #0000BB">&lt;?php<br /></span><span style="color: #FF8000">//&nbsp;src/Product.php<br /><br /></span><span style="color: #007700">use&nbsp;</span><span style="color: #0000BB">Doctrine\ORM\Mapping&nbsp;</span><span style="color: #007700">as&nbsp;</span><span style="color: #0000BB">ORM</span><span style="color: #007700">;<br /><br /></span><span style="color: #FF8000">/**<br />&nbsp;*&nbsp;@ORM\Entity<br />&nbsp;*&nbsp;@ORM\Table(name="products")<br />&nbsp;*/<br /></span><span style="color: #007700">class&nbsp;</span><span style="color: #0000BB">Product<br /></span><span style="color: #007700">{<br />&nbsp;&nbsp;&nbsp;&nbsp;</span><span style="color: #FF8000">/**<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*&nbsp;@ORM\Id<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*&nbsp;@ORM\Column(type="integer")<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*&nbsp;@ORM\GeneratedValue<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*/<br />&nbsp;&nbsp;&nbsp;&nbsp;</span><span style="color: #007700">private&nbsp;</span><span style="color: #0000BB">int</span><span style="color: #007700">|</span><span style="color: #0000BB">null&nbsp;$id&nbsp;</span><span style="color: #007700">=&nbsp;</span><span style="color: #0000BB">null</span><span style="color: #007700">;<br />&nbsp;&nbsp;&nbsp;&nbsp;</span><span style="color: #FF8000">/**<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*&nbsp;@ORM\Column(type="string")<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*/<br />&nbsp;&nbsp;&nbsp;&nbsp;</span><span style="color: #007700">private&nbsp;</span><span style="color: #0000BB">string&nbsp;$name</span><span style="color: #007700">;<br /><br />&nbsp;&nbsp;&nbsp;&nbsp;</span><span style="color: #FF8000">//&nbsp;..&nbsp;(other&nbsp;code)<br /></span><span style="color: #007700">}<br /></span>
+</span>
+</code></code></pre>
+
+<p><a href="https://redbeanphp.com/index.php?p=/crud">RedBeanPHP</a></p>
+
+<pre><code><code><span style="color: #000000">
+<span style="color: #0000BB">&lt;?php<br />&nbsp;&nbsp;&nbsp;&nbsp;$book&nbsp;</span><span style="color: #007700">=&nbsp;</span><span style="color: #0000BB">R</span><span style="color: #007700">::</span><span style="color: #0000BB">dispense</span><span style="color: #007700">(&nbsp;</span><span style="color: #DD0000">'book'&nbsp;</span><span style="color: #007700">);<br /><br />&nbsp;&nbsp;&nbsp;&nbsp;</span><span style="color: #0000BB">$book</span><span style="color: #007700">-&gt;</span><span style="color: #0000BB">title&nbsp;</span><span style="color: #007700">=&nbsp;</span><span style="color: #DD0000">'Learn&nbsp;to&nbsp;Program'</span><span style="color: #007700">;<br />&nbsp;&nbsp;&nbsp;&nbsp;</span><span style="color: #0000BB">$book</span><span style="color: #007700">-&gt;</span><span style="color: #0000BB">rating&nbsp;</span><span style="color: #007700">=&nbsp;</span><span style="color: #0000BB">10</span><span style="color: #007700">;<br />&nbsp;&nbsp;&nbsp;&nbsp;</span><span style="color: #0000BB">$book</span><span style="color: #007700">-&gt;</span><span style="color: #0000BB">sold&nbsp;</span><span style="color: #007700">=&nbsp;</span><span style="color: #DD0000">'2023-07-29'</span><span style="color: #007700">;&nbsp;</span><span style="color: #FF8000">//&nbsp;Date<br />&nbsp;&nbsp;&nbsp;&nbsp;</span><span style="color: #0000BB">$book</span><span style="color: #007700">-&gt;</span><span style="color: #0000BB">cost&nbsp;</span><span style="color: #007700">=&nbsp;</span><span style="color: #DD0000">'12.37'</span><span style="color: #007700">;&nbsp;</span><span style="color: #FF8000">//&nbsp;Decimal<br />&nbsp;&nbsp;&nbsp;&nbsp;</span><span style="color: #0000BB">$book</span><span style="color: #007700">-&gt;</span><span style="color: #0000BB">weight&nbsp;</span><span style="color: #007700">=&nbsp;</span><span style="color: #0000BB">0.53</span><span style="color: #007700">;&nbsp;</span><span style="color: #FF8000">//&nbsp;Double<br /></span>
+</span>
+</code></code></pre>
+
+<p><a href="https://redbeanphp.com/index.php?p=/database#column_functions">RedBeanPHP</a></p>
+
+<pre><code><code><span style="color: #000000">
+<span style="color: #0000BB">&lt;?php<br />&nbsp;&nbsp;&nbsp;&nbsp;R</span><span style="color: #007700">::</span><span style="color: #0000BB">bindFunc</span><span style="color: #007700">(&nbsp;</span><span style="color: #DD0000">'read'</span><span style="color: #007700">,&nbsp;</span><span style="color: #DD0000">'location.point'</span><span style="color: #007700">,&nbsp;</span><span style="color: #DD0000">'asText'&nbsp;</span><span style="color: #007700">);<br />&nbsp;&nbsp;&nbsp;&nbsp;</span><span style="color: #0000BB">R</span><span style="color: #007700">::</span><span style="color: #0000BB">bindFunc</span><span style="color: #007700">(&nbsp;</span><span style="color: #DD0000">'write'</span><span style="color: #007700">,&nbsp;</span><span style="color: #DD0000">'location.point'</span><span style="color: #007700">,&nbsp;</span><span style="color: #DD0000">'GeomFromText'&nbsp;</span><span style="color: #007700">);<br /><br />&nbsp;&nbsp;&nbsp;&nbsp;</span><span style="color: #0000BB">$location&nbsp;</span><span style="color: #007700">=&nbsp;</span><span style="color: #0000BB">R</span><span style="color: #007700">::</span><span style="color: #0000BB">dispense</span><span style="color: #007700">(&nbsp;</span><span style="color: #DD0000">'location'&nbsp;</span><span style="color: #007700">);<br />&nbsp;&nbsp;&nbsp;&nbsp;</span><span style="color: #0000BB">$location</span><span style="color: #007700">-&gt;</span><span style="color: #0000BB">point&nbsp;</span><span style="color: #007700">=&nbsp;</span><span style="color: #DD0000">'POINT(14&nbsp;6)'</span><span style="color: #007700">;<br /><br />&nbsp;&nbsp;&nbsp;&nbsp;</span><span style="color: #FF8000">//inserts&nbsp;using&nbsp;GeomFromText()&nbsp;function<br />&nbsp;&nbsp;&nbsp;&nbsp;</span><span style="color: #0000BB">R</span><span style="color: #007700">::</span><span style="color: #0000BB">store</span><span style="color: #007700">(&nbsp;</span><span style="color: #0000BB">$location&nbsp;</span><span style="color: #007700">);<br /><br />&nbsp;&nbsp;&nbsp;&nbsp;</span><span style="color: #FF8000">//to&nbsp;unbind&nbsp;a&nbsp;function,&nbsp;pass&nbsp;NULL:<br />&nbsp;&nbsp;&nbsp;&nbsp;</span><span style="color: #0000BB">R</span><span style="color: #007700">::</span><span style="color: #0000BB">bindFunc</span><span style="color: #007700">(&nbsp;</span><span style="color: #DD0000">'read'</span><span style="color: #007700">,&nbsp;</span><span style="color: #DD0000">'location.point'</span><span style="color: #007700">,&nbsp;</span><span style="color: #0000BB">NULL&nbsp;</span><span style="color: #007700">);<br /></span>
+</span>
+</code></code></pre>
+
+<h2>Other MariaDB Types</h2>
+
+<ul>
+<li>INET4</li>
+<li>INET6</li>
+</ul>
+
+<p><a href="https://www.doctrine-project.org/projects/doctrine-dbal/en/latest/reference/types.html#custom-mapping-types">Doctrine custom types</a></p>
+
+<pre><code><code><span style="color: #000000">
+<span style="color: #0000BB">&lt;?php<br /></span><span style="color: #007700">namespace&nbsp;</span><span style="color: #0000BB">My\Project\Types</span><span style="color: #007700">;<br /><br />use&nbsp;</span><span style="color: #0000BB">Doctrine\DBAL\Types\Type</span><span style="color: #007700">;<br />use&nbsp;</span><span style="color: #0000BB">Doctrine\DBAL\Platforms\AbstractPlatform</span><span style="color: #007700">;<br /><br /></span><span style="color: #FF8000">/**<br />&nbsp;*&nbsp;My&nbsp;custom&nbsp;datatype.<br />&nbsp;*/<br /></span><span style="color: #007700">class&nbsp;</span><span style="color: #0000BB">Inet6Type&nbsp;</span><span style="color: #007700">extends&nbsp;</span><span style="color: #0000BB">Type<br /></span><span style="color: #007700">{<br />&nbsp;&nbsp;&nbsp;&nbsp;public&nbsp;function&nbsp;</span><span style="color: #0000BB">getSQLDeclaration</span><span style="color: #007700">(array&nbsp;</span><span style="color: #0000BB">$fieldDeclaration</span><span style="color: #007700">,&nbsp;</span><span style="color: #0000BB">AbstractPlatform&nbsp;$platform</span><span style="color: #007700">)<br />&nbsp;&nbsp;&nbsp;&nbsp;{<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return&nbsp;</span><span style="color: #DD0000">'MariaDB_INET6'</span><span style="color: #007700">;<br />&nbsp;&nbsp;&nbsp;&nbsp;}<br />}<br /><br /></span><span style="color: #0000BB">Type</span><span style="color: #007700">::</span><span style="color: #0000BB">addType</span><span style="color: #007700">(</span><span style="color: #DD0000">'inet6'</span><span style="color: #007700">,&nbsp;</span><span style="color: #DD0000">'My\Project\Types\Inet6Type'</span><span style="color: #007700">);<br /></span><span style="color: #0000BB">$conn</span><span style="color: #007700">-&gt;</span><span style="color: #0000BB">getDatabasePlatform</span><span style="color: #007700">()-&gt;</span><span style="color: #0000BB">registerDoctrineTypeMapping</span><span style="color: #007700">(</span><span style="color: #DD0000">'MariaDB_INET6'</span><span style="color: #007700">,&nbsp;</span><span style="color: #DD0000">'inet6'</span><span style="color: #007700">);<br /></span>
+</span>
+</code></code></pre>
+
+<p><a href="https://redbeanphp.com/index.php?p=/uuids">RedBeanPHP is possible</a>, extend MySQL class.</p>
+
+<h1>Table Structures</h1>
+
+<h2>Less Structured Data</h2>
+
+<p>Arrays and JSON types.</p>
+
+<p>Good usage:
+* Fetch and set only</p>
+
+<p>Bad Usage:
+* Search all data for element in array - use relations
+* Search for JSON with explicit member and value</p>
+
+<h2>Relations</h2>
+
+<h3>One to Many</h3>
+
+<p>[RedBeanPHP]https://redbeanphp.com/index.php?p=/one_to_many)</p>
+
+<pre><code><code><span style="color: #000000">
+<span style="color: #0000BB">&lt;?php<br />&nbsp;&nbsp;&nbsp;&nbsp;$shop&nbsp;</span><span style="color: #007700">=&nbsp;</span><span style="color: #0000BB">R</span><span style="color: #007700">::</span><span style="color: #0000BB">dispense</span><span style="color: #007700">(&nbsp;</span><span style="color: #DD0000">'shop'&nbsp;</span><span style="color: #007700">);<br />&nbsp;&nbsp;&nbsp;&nbsp;</span><span style="color: #0000BB">$shop</span><span style="color: #007700">-&gt;</span><span style="color: #0000BB">name&nbsp;</span><span style="color: #007700">=&nbsp;</span><span style="color: #DD0000">'Antiques'</span><span style="color: #007700">;<br /></span>
+</span>
+</code></code></pre>
+
+<p>To add products to the shop, add beans to the ownProductList property, like this:</p>
+
+<pre><code><code><span style="color: #000000">
+<span style="color: #0000BB">&lt;?php<br />&nbsp;&nbsp;&nbsp;&nbsp;$vase&nbsp;</span><span style="color: #007700">=&nbsp;</span><span style="color: #0000BB">R</span><span style="color: #007700">::</span><span style="color: #0000BB">dispense</span><span style="color: #007700">(&nbsp;</span><span style="color: #DD0000">'product'&nbsp;</span><span style="color: #007700">);<br />&nbsp;&nbsp;&nbsp;&nbsp;</span><span style="color: #0000BB">$vase</span><span style="color: #007700">-&gt;</span><span style="color: #0000BB">price&nbsp;</span><span style="color: #007700">=&nbsp;</span><span style="color: #0000BB">25</span><span style="color: #007700">;<br />&nbsp;&nbsp;&nbsp;&nbsp;</span><span style="color: #0000BB">$shop</span><span style="color: #007700">-&gt;</span><span style="color: #0000BB">ownProductList</span><span style="color: #007700">[]&nbsp;=&nbsp;</span><span style="color: #0000BB">$vase<br />&nbsp;&nbsp;&nbsp;&nbsp;R</span><span style="color: #007700">::</span><span style="color: #0000BB">store</span><span style="color: #007700">(&nbsp;</span><span style="color: #0000BB">$shop&nbsp;</span><span style="color: #007700">);<br /></span>
+</span>
+</code></code></pre>
+
+<p><a href="https://www.doctrine-project.org/projects/doctrine-orm/en/latest/tutorials/working-with-indexed-associations.html#mapping-indexed-associations">Doctrine</a>:</p>
+
+<pre><code><code><span style="color: #000000">
+<span style="color: #0000BB">&lt;?php<br /></span><span style="color: #007700">namespace&nbsp;</span><span style="color: #0000BB">Doctrine\Tests\Models\StockExchange</span><span style="color: #007700">;<br /><br />use&nbsp;</span><span style="color: #0000BB">Doctrine\Common\Collections\ArrayCollection</span><span style="color: #007700">;<br />use&nbsp;</span><span style="color: #0000BB">Doctrine\Common\Collections\Collection</span><span style="color: #007700">;<br /><br />#[</span><span style="color: #0000BB">Entity</span><span style="color: #007700">]<br />#[</span><span style="color: #0000BB">Table</span><span style="color: #007700">(</span><span style="color: #0000BB">name</span><span style="color: #007700">:&nbsp;</span><span style="color: #DD0000">'exchange_markets'</span><span style="color: #007700">)]<br />class&nbsp;</span><span style="color: #0000BB">Market<br /></span><span style="color: #007700">{<br />&nbsp;&nbsp;&nbsp;&nbsp;#[</span><span style="color: #0000BB">Id</span><span style="color: #007700">,&nbsp;</span><span style="color: #0000BB">Column</span><span style="color: #007700">(</span><span style="color: #0000BB">type</span><span style="color: #007700">:&nbsp;</span><span style="color: #DD0000">'integer'</span><span style="color: #007700">),&nbsp;</span><span style="color: #0000BB">GeneratedValue</span><span style="color: #007700">]<br />&nbsp;&nbsp;&nbsp;&nbsp;private&nbsp;</span><span style="color: #0000BB">int</span><span style="color: #007700">|</span><span style="color: #0000BB">null&nbsp;$id&nbsp;</span><span style="color: #007700">=&nbsp;</span><span style="color: #0000BB">null</span><span style="color: #007700">;<br /><br />&nbsp;&nbsp;&nbsp;&nbsp;#[</span><span style="color: #0000BB">Column</span><span style="color: #007700">(</span><span style="color: #0000BB">type</span><span style="color: #007700">:&nbsp;</span><span style="color: #DD0000">'string'</span><span style="color: #007700">)]<br />&nbsp;&nbsp;&nbsp;&nbsp;private&nbsp;</span><span style="color: #0000BB">string&nbsp;$name</span><span style="color: #007700">;<br /><br />&nbsp;&nbsp;&nbsp;&nbsp;</span><span style="color: #FF8000">/**&nbsp;@var&nbsp;Collection&lt;string,&nbsp;Stock&gt;&nbsp;*/<br />&nbsp;&nbsp;&nbsp;&nbsp;</span><span style="color: #007700">#[</span><span style="color: #0000BB">OneToMany</span><span style="color: #007700">(</span><span style="color: #0000BB">targetEntity</span><span style="color: #007700">:&nbsp;</span><span style="color: #0000BB">Stock</span><span style="color: #007700">::class,&nbsp;</span><span style="color: #0000BB">mappedBy</span><span style="color: #007700">:&nbsp;</span><span style="color: #DD0000">'market'</span><span style="color: #007700">,&nbsp;</span><span style="color: #0000BB">indexBy</span><span style="color: #007700">:&nbsp;</span><span style="color: #DD0000">'symbol'</span><span style="color: #007700">)]<br />&nbsp;&nbsp;&nbsp;&nbsp;private&nbsp;</span><span style="color: #0000BB">Collection&nbsp;$stocks</span><span style="color: #007700">;<br /></span>
+</span>
+</code></code></pre>
+
+<h3>Many to Many</h3>
+
+<p><a href="https://redbeanphp.com/index.php?p=/many_to_many">RedBeanPHP</a>:</p>
+
+<pre><code><code><span style="color: #000000">
+<span style="color: #0000BB">&lt;?php<br />&nbsp;&nbsp;&nbsp;&nbsp;</span><span style="color: #007700">list(</span><span style="color: #0000BB">$vase</span><span style="color: #007700">,&nbsp;</span><span style="color: #0000BB">$lamp</span><span style="color: #007700">)&nbsp;=&nbsp;</span><span style="color: #0000BB">R</span><span style="color: #007700">::</span><span style="color: #0000BB">dispense</span><span style="color: #007700">(</span><span style="color: #DD0000">'product'</span><span style="color: #007700">,&nbsp;</span><span style="color: #0000BB">2</span><span style="color: #007700">);<br /><br />&nbsp;&nbsp;&nbsp;&nbsp;</span><span style="color: #0000BB">$tag&nbsp;</span><span style="color: #007700">=&nbsp;</span><span style="color: #0000BB">R</span><span style="color: #007700">::</span><span style="color: #0000BB">dispense</span><span style="color: #007700">(&nbsp;</span><span style="color: #DD0000">'tag'&nbsp;</span><span style="color: #007700">);<br />&nbsp;&nbsp;&nbsp;&nbsp;</span><span style="color: #0000BB">$tag</span><span style="color: #007700">-&gt;</span><span style="color: #0000BB">name&nbsp;</span><span style="color: #007700">=&nbsp;</span><span style="color: #DD0000">'Art&nbsp;Deco'</span><span style="color: #007700">;<br /><br />&nbsp;&nbsp;&nbsp;&nbsp;</span><span style="color: #FF8000">//creates&nbsp;product_tag&nbsp;table!<br />&nbsp;&nbsp;&nbsp;&nbsp;</span><span style="color: #0000BB">$vase</span><span style="color: #007700">-&gt;</span><span style="color: #0000BB">sharedTagList</span><span style="color: #007700">[]&nbsp;=&nbsp;</span><span style="color: #0000BB">$tag</span><span style="color: #007700">;<br />&nbsp;&nbsp;&nbsp;&nbsp;</span><span style="color: #0000BB">$lamp</span><span style="color: #007700">-&gt;</span><span style="color: #0000BB">sharedTagList</span><span style="color: #007700">[]&nbsp;=&nbsp;</span><span style="color: #0000BB">$tag</span><span style="color: #007700">;<br />&nbsp;&nbsp;&nbsp;&nbsp;</span><span style="color: #0000BB">R</span><span style="color: #007700">::</span><span style="color: #0000BB">storeAll</span><span style="color: #007700">(&nbsp;[</span><span style="color: #0000BB">$vase</span><span style="color: #007700">,&nbsp;</span><span style="color: #0000BB">$lamp</span><span style="color: #007700">]&nbsp;);<br /></span>
+</span>
+</code></code></pre>
+
+<h1>Queries</h1>
+
+<ul>
+<li>Prepared statment and parameter binding</li>
+</ul>
+
+<p><a href="https://redbeanphp.com/index.php?p=/querying">RedBeanPHP</a></p>
+
+<pre><code><code><span style="color: #000000">
+<span style="color: #0000BB">&lt;?php<br />&nbsp;&nbsp;&nbsp;&nbsp;$books&nbsp;</span><span style="color: #007700">=&nbsp;</span><span style="color: #0000BB">R</span><span style="color: #007700">::</span><span style="color: #0000BB">findFromSQL</span><span style="color: #007700">(</span><span style="color: #DD0000">'book'</span><span style="color: #007700">,</span><span style="color: #DD0000">"<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;SELECT&nbsp;*,&nbsp;count(*)&nbsp;OVER()&nbsp;AS&nbsp;total&nbsp;FROM&nbsp;book&nbsp;WHERE<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;genre&nbsp;=&nbsp;?&nbsp;ORDER&nbsp;BY&nbsp;title&nbsp;ASC&nbsp;OFFSET&nbsp;</span><span style="color: #007700">{</span><span style="color: #0000BB">$from</span><span style="color: #007700">}</span><span style="color: #DD0000">&nbsp;LIMIT&nbsp;</span><span style="color: #007700">{</span><span style="color: #0000BB">$to</span><span style="color: #007700">}</span><span style="color: #DD0000">&nbsp;<br />&nbsp;&nbsp;&nbsp;&nbsp;"</span><span style="color: #007700">,&nbsp;[&nbsp;</span><span style="color: #0000BB">$bindings&nbsp;</span><span style="color: #007700">],&nbsp;&nbsp;[&nbsp;</span><span style="color: #DD0000">'total'&nbsp;</span><span style="color: #007700">]);<br />&nbsp;&nbsp;&nbsp;&nbsp;</span><span style="color: #0000BB">$book&nbsp;&nbsp;</span><span style="color: #007700">=&nbsp;</span><span style="color: #0000BB">reset</span><span style="color: #007700">(</span><span style="color: #0000BB">$books</span><span style="color: #007700">);<br />&nbsp;&nbsp;&nbsp;&nbsp;</span><span style="color: #0000BB">$total&nbsp;</span><span style="color: #007700">=&nbsp;</span><span style="color: #0000BB">$book</span><span style="color: #007700">-&gt;</span><span style="color: #0000BB">info</span><span style="color: #007700">(</span><span style="color: #DD0000">'total'</span><span style="color: #007700">);<br /></span>
+</span>
+</code></code></pre>
+
+<p>Don't use <code>mysql_real_escape</code>.</p>
+
+<ul>
+<li>Antipatterns</li>
+</ul>
+
+<pre><code><code><span style="color: #000000">
+<span style="color: #0000BB">&lt;?php<br />&nbsp;&nbsp;&nbsp;&nbsp;$user&nbsp;</span><span style="color: #007700">=&nbsp;</span><span style="color: #0000BB">R</span><span style="color: #007700">::</span><span style="color: #0000BB">load</span><span style="color: #007700">(&nbsp;</span><span style="color: #DD0000">'user'</span><span style="color: #007700">,&nbsp;</span><span style="color: #0000BB">$id&nbsp;</span><span style="color: #007700">);<br />&nbsp;&nbsp;&nbsp;&nbsp;if&nbsp;(empty(</span><span style="color: #0000BB">$user</span><span style="color: #007700">))&nbsp;{<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span style="color: #0000BB">$book&nbsp;</span><span style="color: #007700">=&nbsp;</span><span style="color: #0000BB">R</span><span style="color: #007700">::</span><span style="color: #0000BB">dispense</span><span style="color: #007700">(&nbsp;</span><span style="color: #DD0000">'user'&nbsp;</span><span style="color: #007700">);<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span style="color: #0000BB">$id&nbsp;</span><span style="color: #007700">=&nbsp;</span><span style="color: #0000BB">R</span><span style="color: #007700">::</span><span style="color: #0000BB">store</span><span style="color: #007700">(&nbsp;</span><span style="color: #0000BB">$user&nbsp;</span><span style="color: #007700">)<br />&nbsp;&nbsp;&nbsp;&nbsp;}<br /></span>
+</span>
+</code></code></pre>
+
+<pre><code><code><span style="color: #000000">
+<span style="color: #0000BB">&lt;?php<br />&nbsp;&nbsp;&nbsp;&nbsp;</span><span style="color: #007700">try{<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span style="color: #0000BB">R</span><span style="color: #007700">::</span><span style="color: #0000BB">store</span><span style="color: #007700">(&nbsp;</span><span style="color: #0000BB">$user&nbsp;</span><span style="color: #007700">);<br />&nbsp;&nbsp;&nbsp;&nbsp;}<br />&nbsp;&nbsp;&nbsp;&nbsp;catch(&nbsp;</span><span style="color: #0000BB">SQL&nbsp;$e&nbsp;</span><span style="color: #007700">)&nbsp;{<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if&nbsp;(</span><span style="color: #0000BB">$e</span><span style="color: #007700">-&gt;</span><span style="color: #0000BB">getSQLState</span><span style="color: #007700">()&nbsp;==&nbsp;</span><span style="color: #0000BB">23000</span><span style="color: #007700">)&nbsp;{<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span style="color: #0000BB">$user&nbsp;</span><span style="color: #007700">=&nbsp;</span><span style="color: #0000BB">R</span><span style="color: #007700">::</span><span style="color: #0000BB">load</span><span style="color: #007700">(&nbsp;</span><span style="color: #DD0000">'user'</span><span style="color: #007700">,&nbsp;</span><span style="color: #DD0000">'name&nbsp;=&nbsp;"Daniel"&nbsp;);<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br />&nbsp;&nbsp;&nbsp;&nbsp;}<br /></span>
+</span>
+</code></code></pre>
+
+<h2>Use transactions:</h2>
+
+<pre><code><code><span style="color: #000000">
+<span style="color: #0000BB">&lt;?php<br /></span><span style="color: #007700">use&nbsp;</span><span style="color: #0000BB">Illuminate\Support\Facades\DB</span><span style="color: #007700">;<br /><br /></span><span style="color: #0000BB">DB</span><span style="color: #007700">::</span><span style="color: #0000BB">transaction</span><span style="color: #007700">(function&nbsp;()&nbsp;{<br />&nbsp;&nbsp;&nbsp;&nbsp;</span><span style="color: #0000BB">DB</span><span style="color: #007700">::</span><span style="color: #0000BB">update</span><span style="color: #007700">(</span><span style="color: #DD0000">'update&nbsp;users&nbsp;set&nbsp;votes&nbsp;=&nbsp;1'</span><span style="color: #007700">);<br /><br />&nbsp;&nbsp;&nbsp;&nbsp;</span><span style="color: #0000BB">DB</span><span style="color: #007700">::</span><span style="color: #0000BB">delete</span><span style="color: #007700">(</span><span style="color: #DD0000">'delete&nbsp;from&nbsp;posts'</span><span style="color: #007700">);<br />});<br /></span>
+</span>
+</code></code></pre>
+
+<p><a href="https://redbeanphp.com/index.php?p=/database">RedBeanPHP</a></p>
+
+<pre><code><code><span style="color: #000000">
+<span style="color: #0000BB">&lt;?php<br />&nbsp;&nbsp;&nbsp;&nbsp;R</span><span style="color: #007700">::</span><span style="color: #0000BB">transaction</span><span style="color: #007700">(&nbsp;function()&nbsp;{<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;..</span><span style="color: #0000BB">store&nbsp;some&nbsp;beans</span><span style="color: #007700">..<br />&nbsp;&nbsp;&nbsp;&nbsp;}&nbsp;);<br /></span>
+</span>
+</code></code></pre>
+
+<p>Lock modes:</p>
+
+<p><a href="https://redbeanphp.com/api/classes/R.html#findForUpdate">RedBeanPHP</a></p>
+
+<pre><code><code><span style="color: #000000">
+<span style="color: #0000BB">&lt;?php<br />&nbsp;&nbsp;&nbsp;&nbsp;R</span><span style="color: #007700">::</span><span style="color: #0000BB">transaction</span><span style="color: #007700">(&nbsp;function()&nbsp;{<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span style="color: #0000BB">$bean&nbsp;</span><span style="color: #007700">=&nbsp;</span><span style="color: #0000BB">R</span><span style="color: #007700">::</span><span style="color: #0000BB">findForUpdate</span><span style="color: #007700">(&nbsp;</span><span style="color: #DD0000">'bean'</span><span style="color: #007700">,&nbsp;</span><span style="color: #DD0000">'&nbsp;title&nbsp;LIKE&nbsp;?&nbsp;'</span><span style="color: #007700">,&nbsp;array(</span><span style="color: #DD0000">'title'</span><span style="color: #007700">)&nbsp;);<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span style="color: #0000BB">$bean</span><span style="color: #007700">.</span><span style="color: #0000BB">title&nbsp;</span><span style="color: #007700">=&nbsp;</span><span style="color: #DD0000">'new&nbsp;title'</span><span style="color: #007700">;<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span style="color: #0000BB">R</span><span style="color: #007700">::</span><span style="color: #0000BB">store</span><span style="color: #007700">(&nbsp;</span><span style="color: #0000BB">$bean&nbsp;</span><span style="color: #007700">);<br />&nbsp;&nbsp;&nbsp;&nbsp;}&nbsp;);<br /></span>
+</span>
+</code></code></pre>
+
+<h1>Indicies/Indexes</h1>
+
+<p>Necessary when you search by more than one criteria:</p>
+
+<pre><code><code><span style="color: #000000">
+<span style="color: #0000BB">&lt;?php<br />&nbsp;&nbsp;&nbsp;&nbsp;$bean&nbsp;</span><span style="color: #007700">=&nbsp;</span><span style="color: #0000BB">R</span><span style="color: #007700">::</span><span style="color: #0000BB">findForUpdate</span><span style="color: #007700">(&nbsp;</span><span style="color: #DD0000">'bean'</span><span style="color: #007700">,&nbsp;</span><span style="color: #DD0000">'&nbsp;title&nbsp;LIKE&nbsp;?&nbsp;and&nbsp;flavor&nbsp;=&nbsp;?'</span><span style="color: #007700">,&nbsp;array(</span><span style="color: #DD0000">'mexican%'</span><span style="color: #007700">,&nbsp;</span><span style="color: #DD0000">'red'</span><span style="color: #007700">)&nbsp;);<br /></span>
+</span>
+</code></code></pre>
+
+<p>When compond indexes, order matters:
+* fixed, range, join</p>
+
+<p><a href="https://stackoverflow.com/questions/17991782/how-can-i-add-an-index-with-doctrine-2-to-a-column-without-making-it-a-primary-k">Doctrine</a></p>
+
+<pre><code><code><span style="color: #000000">
+<span style="color: #0000BB">&lt;?php<br /></span><span style="color: #FF8000">/**<br />&nbsp;*&nbsp;@Entity<br />&nbsp;*&nbsp;@Table(name="ecommerce_products",indexes={<br />&nbsp;*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;@Index(name="search_idx",&nbsp;columns={"name",&nbsp;"email"})<br />&nbsp;*&nbsp;})<br />&nbsp;*/<br /></span><span style="color: #007700">class&nbsp;</span><span style="color: #0000BB">ECommerceProduct<br /></span><span style="color: #007700">{<br /></span>
+</span>
+</code></code></pre>
+
+<p><a href="https://redbeanphp.com/index.php?p=/crud">RedBeanPHP</a>:</p>
+
+<blockquote>
+  <p>RedBeanPHP will build all the necessary structures to store your data. However custom indexes and constraints have to be added manually (after freezing your web application).</p>
+</blockquote>
+
+<pre><code><code><span style="color: #000000">
+<span style="color: #0000BB">&lt;?php<br />&nbsp;&nbsp;&nbsp;&nbsp;</span><span style="color: #007700">require&nbsp;</span><span style="color: #DD0000">'rb.php'</span><span style="color: #007700">;<br />&nbsp;&nbsp;&nbsp;&nbsp;</span><span style="color: #0000BB">R</span><span style="color: #007700">::</span><span style="color: #0000BB">setup</span><span style="color: #007700">();<br />&nbsp;&nbsp;&nbsp;&nbsp;</span><span style="color: #0000BB">R</span><span style="color: #007700">::</span><span style="color: #0000BB">freeze</span><span style="color: #007700">(&nbsp;</span><span style="color: #0000BB">TRUE&nbsp;</span><span style="color: #007700">);<br />&nbsp;&nbsp;&nbsp;&nbsp;</span><span style="color: #0000BB">R</span><span style="color: #007700">::</span><span style="color: #0000BB">exec</span><span style="color: #007700">(&nbsp;</span><span style="color: #DD0000">'CREATE&nbsp;INDEX&nbsp;IF&nbsp;NOT&nbsp;EXIST&nbsp;search_index&nbsp;ON&nbsp;ecommerce_products&nbsp;(name,&nbsp;email)'&nbsp;</span><span style="color: #007700">);<br /></span>
+</span>
+</code></code></pre>
